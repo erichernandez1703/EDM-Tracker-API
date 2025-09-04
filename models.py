@@ -10,9 +10,11 @@ class Artist(Base):
     name = Column(String,nullable = False)
     genre = Column(String)
     instagram_name = Column(String)
+    lineups = relationship("Lineup", back_populates="artist")
+    #                      modelname           modelname                 variable attribute
 
     def __repr__(self):
-        return f"Aritst(name = {self.name})" #helps debugging
+        return f"Artist(name={self.name})" #helps debugging
 
 class Event(Base):
     __tablename__ = "event"
@@ -22,6 +24,7 @@ class Event(Base):
     date = Column(Date)
     location = Column(String)
     organizer_id = Column(Integer,ForeignKey("organizer.id"))
+    lineups = relationship("Lineup", back_populates="event")
 
 class Lineup(Base):
     __tablename__ = "lineup"
@@ -30,6 +33,9 @@ class Lineup(Base):
     event_id = Column(Integer,ForeignKey("event.id"))
     artist_id = Column(Integer,ForeignKey("artist.id"))
     festival_id = Column(Integer,ForeignKey("festival.id"))
+    festival = relationship("Festival", back_populates="lineups")
+    artist = relationship("Artist", back_populates="lineups")
+    event = relationship("Event", back_populates="lineups")
 
 class Organizer(Base):
     __tablename__ = "organizer"
@@ -46,6 +52,8 @@ class Festival(Base):
     end_date = Column(Date)
     location = Column(String)
     organizer_id = Column(Integer,ForeignKey("organizer.id"))
+    lineups = relationship("Lineup", back_populates="festival") #i have many lineups
+    
 
 class Source(Base):
     __tablename__ = "source"
