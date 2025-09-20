@@ -6,6 +6,7 @@ from typing import List
 from .schemas import WeeklySchedule
 from .models import Event
 
+
 app = FastAPI() #makes the app object - attach functions to it
 
 @app.get("/") 
@@ -39,6 +40,16 @@ def get_artists_this_week(db: Session = Depends(get_db)):
 def read_artist(artist_name: str, db: Session = Depends(get_db)):
     return crud.get_artist_with_events_festivals(db=db,artist_name=artist_name)
 
+
 @app.get("/debug/events")
 def debug_events(db: Session = Depends(get_db)):
     return db.query(Event).all()
+
+
+@app.get("/enrich-artist/{artist_name}")
+def enrich_artist(artist_name: str):
+    metadata = crud.fetch_artist_metadata(artist_name)
+    if metadata:
+        return metadata
+    return {"error": "Arist not found or metadata unavailable"}
+

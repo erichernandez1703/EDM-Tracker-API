@@ -5,6 +5,7 @@ from .models import Artist, Event, Festival, Source, Lineup
 from datetime import date, timedelta #date is timestamp, timedelta is distance between timestamps
 from sqlalchemy import or_, and_
 from collections import defaultdict
+import requests
 
 def get_festival_by_name(db: Session, festival_name: str):
     festival = db.query(Festival).options(joinedload(Festival.lineups).joinedload(Lineup.artist)).filter(Festival.name == festival_name).first()
@@ -116,3 +117,22 @@ def get_artists_this_week(db: Session):
             "date": performance_date.isoformat()
         })
     return dict(schedule)
+
+
+
+
+def fetch_artist_metadata(artist_name: str) -> dict:
+    url = "https://www.theaudiodb.com/api/v1/json/123/search.php"
+    response = requests.get(url, params = {"s": artist_name})
+    if response.status_code == 200:
+        data = response.json()
+        artist = data.get("artists")
+        if artist:
+            raw = artist[0]
+            return {
+                "name": raw.get("strArtist"),
+                "genre": raw.get("strGenre"),
+                "bio": raw.get("strBiographyEN"),
+                "image_url": raw.get("strArtistThumb"),
+            }
+        return None
