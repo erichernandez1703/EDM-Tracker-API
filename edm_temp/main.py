@@ -46,10 +46,14 @@ def debug_events(db: Session = Depends(get_db)):
     return db.query(Event).all()
 
 
-@app.get("/enrich-artist/{artist_name}")
-def enrich_artist(artist_name: str):
-    metadata = crud.fetch_artist_metadata(artist_name)
-    if metadata:
-        return metadata
-    return {"error": "Arist not found or metadata unavailable"}
 
+
+@app.get("/artist-profile/{name}")
+def get_artist_profile(name:str, db: Session = Depends(get_db)):
+    enriched = crud.fetch_artist_metadata(name) or {}
+
+    local = crud.get_artist_with_events_festivals(db=db,artist_name=name)
+
+    profile = crud.merge_artist_data(enriched, local)
+
+    return profile

@@ -35,7 +35,7 @@ def get_artist_with_events_festivals(db: Session, artist_name: str):
         joinedload(Artist.lineups).joinedload(Lineup.festival)).filter(Artist.name == artist_name).first()
 
     if not artist:
-        raise HTTPException(status_code=404, detail = "Artist Not Found")
+        return None
     
     return {
         "artist":{
@@ -120,13 +120,12 @@ def get_artists_this_week(db: Session):
 
 
 
-
-def fetch_artist_metadata(artist_name: str) -> dict:
+def fetch_artist_metadata(artist_name: str) -> dict:  #takes in argument, returns dict
     url = "https://www.theaudiodb.com/api/v1/json/123/search.php"
-    response = requests.get(url, params = {"s": artist_name})
+    response = requests.get(url, params = {"s": artist_name}) #searches artist by name
     if response.status_code == 200:
-        data = response.json()
-        artist = data.get("artists")
+        data = response.json() #converts json response into a dict
+        artist = data.get("artists") #retrieves list of artists
         if artist:
             raw = artist[0]
             return {
@@ -136,3 +135,18 @@ def fetch_artist_metadata(artist_name: str) -> dict:
                 "image_url": raw.get("strArtistThumb"),
             }
         return None
+
+
+def merge_artist_data(enriched: dict, local: dict) -> dict: #expects a dicts, and returns a dict
+    local = local or {} #in case local is None, set to empty dict
+    enriched = enriched or {} #in case enriched is None, set to empty dict
+    local_artist = local.get("artist", {}) #in case artist key is missing, set to empty dict
+
+    return {
+        "name": enriched.get("name") or local_artist.get("name"),
+        "genre": enriched.get("genre") or local_artist.get("genre"),
+        "bio": enriched.get('bio') or "Biography not available",
+        "image_url": enriched.get("image_url") or "Image not available",
+        "festivals": local.get("festivals", []),
+        "events": local.get("events", []),
+    }
